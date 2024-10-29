@@ -35,4 +35,7 @@
   .special-word {
     @apply text-primaryColor;
   }
+  .btn {
+    @apply bg-primaryColor text-white px-5 py-2 rounded-lg hover:opacity-90;
+  }
 }
