@@ -1,13 +1,15 @@
 'use client';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import avatar1 from '@/public/img/avatar1.jpg';
 import { AiOutlineClose } from 'react-icons/ai';
+import { usePathname } from 'next/navigation';
 
 const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const loggedIn = true;
+  const pathname = usePathname();
+  const loggedIn = false;
   const handleShowDropdown = () => setShowDropdown((prev) => true);
   const handleHideDropdown = () => setShowDropdown((prev) => false);
   return (
@@ -18,15 +20,36 @@ const Navbar = () => {
 
       <ul className="flex items-center gap-3">
         <li>
-          <Link href={'/blog'}>Blog</Link>
+          <Link
+            href={'/blog'}
+            className={
+              pathname === '/blog' ? 'text-primaryColor font-bold' : ''
+            }
+          >
+            Blog
+          </Link>
         </li>
         {loggedIn ? (
           <>
             <li>
-              <Link href={'/create-blog'}>Create</Link>
+              <Link
+                href={'/create-blog'}
+                className={
+                  pathname === '/create-blog'
+                    ? 'text-primaryColor font-bold'
+                    : ''
+                }
+              >
+                Create
+              </Link>
             </li>
             <li>
-              <Link href={'/user'}>
+              <Link
+                href={'/user'}
+                className={
+                  pathname === '/user' ? 'text-primaryColor font-bold' : ''
+                }
+              >
                 <div className="relative">
                   <Image
                     onClick={handleShowDropdown}
@@ -63,10 +86,24 @@ const Navbar = () => {
         ) : (
           <>
             <li>
-              <Link href={'/login'}>Log In</Link>
+              <Link
+                href={'/login'}
+                className={
+                  pathname === '/login' ? 'text-primaryColor font-bold' : ''
+                }
+              >
+                Log In
+              </Link>
             </li>
             <li>
-              <Link href={'/signup'}>Sign Up </Link>
+              <Link
+                href={'/signup'}
+                className={
+                  pathname === '/signup' ? 'text-primaryColor font-bold' : ''
+                }
+              >
+                Sign Up{' '}
+              </Link>
             </li>
           </>
         )}
