@@ -5,9 +5,12 @@ import Image from 'next/image';
 import avatar1 from '@/public/img/avatar1.jpg';
 import { AiOutlineClose } from 'react-icons/ai';
 import { usePathname } from 'next/navigation';
+import { signOut, useSession } from 'next-auth/react';
 
 const Navbar = () => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const { data: session, status } = useSession();
+
   const pathname = usePathname();
   const loggedIn = false;
   const handleShowDropdown = () => setShowDropdown((prev) => true);
@@ -29,7 +32,7 @@ const Navbar = () => {
             Blog
           </Link>
         </li>
-        {loggedIn ? (
+        {session?.user ? (
           <>
             <li>
               <Link
@@ -65,7 +68,9 @@ const Navbar = () => {
                         className="relative w-full cursor-pointer left-8 -top-3 "
                       />
                       <button
-                        onClick={handleHideDropdown}
+                        onClick={() => {
+                          signOut(), handleHideDropdown();
+                        }}
                         className="relative right-3 mb-3 "
                       >
                         Logout
