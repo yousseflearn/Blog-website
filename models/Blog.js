@@ -32,7 +32,7 @@ const BlogSchema = new mongoose.Schema(
     category: {
       type: String,
       required: true,
-      enum: ['Arabica', 'Robusta', 'Excelsa', 'Liberica'],
+      enum: ['Arabica', 'Robusta', 'Excelsa', 'Liberica', 'Matcha'],
     },
     authorId: {
       type: mongoose.Schema.Types.ObjectId,

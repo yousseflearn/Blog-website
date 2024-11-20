@@ -2,11 +2,12 @@
 import Input from '@/components/Input';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TextArea from '@/components/TextArea';
 import Image from 'next/image';
 import demoImage from '@/public/img/demo_image.jpg';
 import { useSession } from 'next-auth/react';
+import { deletePhoto } from '@/actions/uploadActions';
 
 const initialState = {
   title: '',
@@ -14,19 +15,47 @@ const initialState = {
   excerpt: '',
   quote: '',
   category: 'Arabica',
-  photo: '',
+  photo: {},
+  blogId: '',
+  newImage: '',
 };
 
-const CreateBlog = () => {
+const EditBlog = ({ params }) => {
   const CLOUD_NAME = 'dkh0bhk7l';
   const UPLOAD_PRESET = 'nextjs_blog_images';
   const [state, setState] = useState(initialState);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
   const { data: session, status } = useSession();
 
-  const router = useRouter();
+  useEffect(() => {
+    async function fetchBlog() {
+      try {
+        const res = await fetch(`http://localhost:3000/api/blog/${params.id}`);
+        if (res.status === 200) {
+          const blogData = await res.json();
+          setState((prevState) => ({
+            ...prevState,
+            title: blogData.title,
+            description: blogData.description,
+            excerpt: blogData.excerpt,
+            quote: blogData.quote,
+            category: blogData.category,
+            photo: blogData.image,
+            blogId: blogData._id,
+          }));
+        } else {
+          setError('Error fetching blog data');
+        }
+      } catch (error) {
+        setError('Error fetching blog data');
+      }
+    }
+
+    fetchBlog();
+  }, [params.id]);
 
   if (status === 'loading') {
     return <p>Loading...</p>;
@@ -49,14 +78,14 @@ const CreateBlog = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const { photo, title, category, description, excerpt, quote } = state;
+    const { newImage, title, category, description, excerpt, quote } = state;
     if (!title || !description || !category || !excerpt || !quote) {
       setError('Please fill out all required fields!');
       return;
     }
-    if (photo) {
+    if (newImage) {
       const maxSize = 5 * 1024 * 1024; // 5 MB
-      if (photo.size > maxSize) {
+      if (newImage.size > maxSize) {
         setError('File size is too large,please add a file under 5MB!');
         return;
       }
@@ -82,9 +111,19 @@ const CreateBlog = () => {
       setIsLoading(true);
       setError('');
       setSuccess('');
-      const image = await uploadImage();
 
-      const newBlog = {
+      let image;
+
+      if (state.newImage) {
+        image = await uploadImage();
+        if (state.photo?.id) {
+          await deletePhoto(state.photo.id);
+        } else {
+          image = state.photo;
+        }
+      }
+
+      const updateBlog = {
         title,
         description,
         excerpt,
@@ -94,37 +133,40 @@ const CreateBlog = () => {
         authorId: session?.user?._id,
       };
 
-      const response = await fetch('http://localhost:3000/api/blog', {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-        method: 'POST',
-        body: JSON.stringify(newBlog),
-      });
+      const response = await fetch(
+        `http://localhost:3000/api/blog/${params.id}`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${session?.user?.accessToken}`,
+          },
+          method: 'PUT',
+          body: JSON.stringify(updateBlog),
+        }
+      );
 
-      if (response?.status === 201) {
-        setSuccess('Blog created successfully');
+      if (response?.status === 200) {
+        setSuccess('Blog updated successfully');
         setTimeout(() => {
           router.refresh();
-          router.push('/blog');
+          router.push(`/blog/${params.id}`);
         }, 1500);
       } else {
-        setError('Error occurred while creating blog.');
+        setError('Error occurred while updating blog.');
       }
     } catch (error) {
       console.log(error);
-      setError('Error occurred while creating blog.');
+      setError('Error occurred while updating blog.');
     }
     setIsLoading(false);
   };
 
   const uploadImage = async () => {
-    if (!state.photo) return;
+    if (!state.newImage) return;
 
     const formData = new FormData();
 
-    formData.append('file', state.photo);
+    formData.append('file', state.newImage);
     formData.append('upload_preset', UPLOAD_PRESET);
     try {
       const res = await fetch(
@@ -145,10 +187,14 @@ const CreateBlog = () => {
     }
   };
 
+  const handleCancelUploadImg = () => {
+    setState({ ...state, ['newImage']: '' });
+  };
+
   return (
     <section className="container max-w-3xl">
       <h2 className="mb-5">
-        <span className="special-word">Create</span>Blog
+        <span className="special-word">Edit </span>Blog
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -205,14 +251,13 @@ const CreateBlog = () => {
           <input
             onChange={handleChange}
             type="file"
-            name="photo"
+            name="newImage"
             accept="image/*"
           />
-          {state.photo && (
+          {state.newImage ? (
             <div>
-              {' '}
               <Image
-                src={URL.createObjectURL(state.photo)}
+                src={URL.createObjectURL(state.newImage)}
                 priority
                 alt="Sample Image"
                 width={0}
@@ -220,6 +265,24 @@ const CreateBlog = () => {
                 sizes="100vw"
                 className="w-32 mt-5"
               />
+              <button onClick={handleCancelUploadImg}>Cancel</button>
+            </div>
+          ) : (
+            <div>
+              {state.photo && state.photo['url'] && (
+                <div>
+                  {' '}
+                  <Image
+                    src={state.photo.url}
+                    priority
+                    alt="Sample Image"
+                    width={0}
+                    height={0}
+                    sizes="100vw"
+                    className="w-32 mt-5"
+                  />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -228,11 +291,11 @@ const CreateBlog = () => {
         {success && <div className="text-green-700">{success}</div>}
 
         <button type="submit" className="btn">
-          {isLoading ? 'Loading...' : 'Create'}
+          {isLoading ? 'Loading...' : 'Edit'}
         </button>
       </form>
     </section>
   );
 };
 
-export default CreateBlog;
+export default EditBlog;
