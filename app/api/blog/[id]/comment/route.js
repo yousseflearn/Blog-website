@@ -1,11 +1,13 @@
-// http://localhost:3000/api/blog/someid
+// http://localhost:3000/api/blog/blogid/comment
 import Blog from '@/models/Blog';
 import { connect } from '@/lib/db';
 import { verifyJwtToken } from '@/lib/jwt';
 import { NextResponse } from 'next/server';
+import User from '@/models/User';
 
-export async function POST(req) {
+export async function POST(req, res) {
   await connect();
+  const id = res.params.id;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
   const decodedToken = verifyJwtToken(token);
@@ -19,24 +21,18 @@ export async function POST(req) {
   }
   try {
     const body = await req.json();
-    const newBlog = await Blog.create(body);
-    return NextResponse.json(newBlog, { status: 201 });
-  } catch (error) {
-    return NextResponse.json({ message: 'POST error (create blog)' });
-  }
-}
+    const blog = await Blog.findById(id);
+    const user = await User.findById(decodedToken._id);
 
-export async function GET(req) {
-  await connect();
-  try {
-    const blogs = await Blog.find({})
-      .populate({
-        path: 'authorId',
-        select: '-password',
-      })
-      .sort({ createdAt: -1 });
-    return NextResponse.json(blogs);
+    const newComment = {
+      text: body.text,
+      user,
+    };
+
+    blog.comments.unshift(newComment);
+    await blog.save();
+    return NextResponse.json(blog, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ message: 'Get error' }, { status: 500 });
+    return NextResponse.json({ message: 'POST error' });
   }
 }
