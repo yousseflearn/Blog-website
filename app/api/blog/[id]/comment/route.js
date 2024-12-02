@@ -10,7 +10,9 @@ export async function POST(req, res) {
   const id = res.params.id;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return new Response(
       JSON.stringify({ error: 'unauthorized (wrong or expired token)' }),
@@ -19,6 +21,7 @@ export async function POST(req, res) {
       }
     );
   }
+
   try {
     const body = await req.json();
     const blog = await Blog.findById(id);
@@ -30,7 +33,9 @@ export async function POST(req, res) {
     };
 
     blog.comments.unshift(newComment);
+
     await blog.save();
+
     return NextResponse.json(blog, { status: 201 });
   } catch (error) {
     return NextResponse.json({ message: 'POST error' });

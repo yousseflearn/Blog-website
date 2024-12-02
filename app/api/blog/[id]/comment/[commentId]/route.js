@@ -6,11 +6,14 @@ import { NextResponse } from 'next/server';
 
 export async function DELETE(req, res) {
   await connect();
+
   const id = res.params.id;
   const commentId = res.params.commentId;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return NextResponse.json(
       { error: 'unauthorized (wrong or expired token)' },

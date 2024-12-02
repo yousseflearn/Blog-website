@@ -99,12 +99,14 @@ const BlogDetails = ({ params }) => {
             },
           }
         );
+
         if (response?.status === 200) {
           await deletePhoto(imageId);
           router.refresh();
           router.push('/blog');
         }
       }
+
       setIsDeleting(false);
     } catch (error) {
       console.log(error);
@@ -112,7 +114,7 @@ const BlogDetails = ({ params }) => {
   };
 
   const handleLike = async () => {
-    if (!session?.user?._id) {
+    if (!session?.user) {
       alert('Please Login to your account if you want to add likes ');
       return;
     }
@@ -129,6 +131,7 @@ const BlogDetails = ({ params }) => {
           body: JSON.stringify(null),
         }
       );
+
       if (response.status === 200) {
         setIsLiked((prev) => !prev);
         setBlogLikes((prev) => (isLiked ? prev - 1 : prev + 1));
@@ -155,6 +158,7 @@ const BlogDetails = ({ params }) => {
       const newComment = {
         text: commentText,
       };
+
       const response = await fetch(
         `http://localhost:3000/api/blog/${params.id}/comment`,
         {
@@ -180,6 +184,7 @@ const BlogDetails = ({ params }) => {
       console.log(error);
       setError('Error occurred while creating comment.');
     }
+
     setIsCommenting(false);
   };
 
@@ -220,7 +225,6 @@ const BlogDetails = ({ params }) => {
           </Link>
 
           <button
-            type="submit"
             onClick={() => handleBlogDelete(blogDetails?.image?.id)}
             className="flex item-center gap-1  text-red-500"
           >
@@ -262,6 +266,7 @@ const BlogDetails = ({ params }) => {
               <AiTwotoneCalendar /> {formattedTime}
             </span>
           </p>
+
           <div>
             <Image
               src={blogDetails?.image ? blogDetails?.image?.url : demoImage}
@@ -272,6 +277,7 @@ const BlogDetails = ({ params }) => {
               className="w-full h-full rounded-lg"
             />
           </div>
+
           <div className="text-start">
             <div className="space-y-5">
               {blogDetails?.description &&
@@ -295,10 +301,12 @@ const BlogDetails = ({ params }) => {
           </div>
         </div>
       </div>
+
       <div className="py-12">
         <div className="flex gap-10 items-center text-xl justify-center">
           <div className="flex items-center gap-1">
             <p>{blogLikes}</p>
+
             {isLiked ? (
               <AiFillHeart
                 onClick={handleLike}
@@ -310,6 +318,7 @@ const BlogDetails = ({ params }) => {
               <AiOutlineHeart onClick={handleLike} size={20} cursor="pointer" />
             )}
           </div>
+
           <div className="flex items-center gap-1">
             <p>{blogComments}</p>
             <AiOutlineComment size={20} />
@@ -356,6 +365,7 @@ const BlogDetails = ({ params }) => {
                   sizes="100vw"
                   className="w-10 h-10 rounded-full"
                 />
+
                 <div>
                   <p className="text-whiteColor">{comment?.user?.name}</p>
                   <p>{comment.text}</p>

@@ -1,30 +1,52 @@
 'use client';
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import avatar1 from '@/public/img/avatar1.jpg';
+import demoImage from '@/public/img/demo_image.jpg';
 import { AiOutlineClose } from 'react-icons/ai';
 import { usePathname } from 'next/navigation';
 import { signOut, useSession } from 'next-auth/react';
 
 const Navbar = () => {
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [userData, setUserData] = useState({});
   const { data: session, status } = useSession();
 
   const pathname = usePathname();
-  const loggedIn = false;
+
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  async function fetchUser() {
+    try {
+      const res = await fetch(
+        `http://localhost:3000/api/user/${session?.user?._id}`
+      );
+
+      const resData = await res.json();
+
+      setUserData(resData);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  useEffect(() => {
+    fetchUser();
+  }, [session?.user?._id]);
+
   const handleShowDropdown = () => setShowDropdown((prev) => true);
   const handleHideDropdown = () => setShowDropdown((prev) => false);
   return (
     <div className="container py-2 h-16 flex items-center justify-between">
-      <Link href={'/'}>
-        DeerIT <span className="special-word">blog.</span>
+      <Link href="/">
+        <h2>
+          Deer <span className="special-word">IT</span>
+        </h2>
       </Link>
 
       <ul className="flex items-center gap-3">
         <li>
           <Link
-            href={'/blog'}
+            href="/blog"
             className={
               pathname === '/blog' ? 'text-primaryColor font-bold' : ''
             }
@@ -32,11 +54,12 @@ const Navbar = () => {
             Blog
           </Link>
         </li>
+
         {session?.user ? (
           <>
             <li>
               <Link
-                href={'/create-blog'}
+                href="/create-blog"
                 className={
                   pathname === '/create-blog'
                     ? 'text-primaryColor font-bold'
@@ -47,52 +70,49 @@ const Navbar = () => {
               </Link>
             </li>
             <li>
-              <Link
-                href={'/user'}
-                className={
-                  pathname === '/user' ? 'text-primaryColor font-bold' : ''
-                }
-              >
-                <div className="relative">
-                  <Image
-                    onClick={handleShowDropdown}
-                    src={avatar1}
-                    alt="avatar"
-                    sizes="100vw"
-                    className="w-10 h-10 rounded-full cursor-pointer"
-                  />
-                  {showDropdown && (
-                    <div className="absolute top-9 right-0  bg-primaryColorLight p-5 text-primaryColor rounded-2xl">
-                      <AiOutlineClose
-                        onClick={handleHideDropdown}
-                        className="relative w-full cursor-pointer left-8 -top-3 "
-                      />
-                      <button
-                        onClick={() => {
-                          signOut(), handleHideDropdown();
-                        }}
-                        className="relative right-3 mb-3 "
-                      >
-                        Logout
-                      </button>
-                      <Link
-                        onClick={handleHideDropdown}
-                        href={'/user'}
-                        className="relative right-3 mt-3 "
-                      >
-                        Profile
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </Link>
+              <div className="relative">
+                <Image
+                  onClick={handleShowDropdown}
+                  src={
+                    userData?.avatar?.url ? userData?.avatar?.url : demoImage
+                  }
+                  alt="avatar"
+                  width={0}
+                  height={0}
+                  sizes="100vw"
+                  className="w-10 h-10 rounded-full cursor-pointer"
+                />
+
+                {showDropdown && (
+                  <div className="absolute top-0 right-0 bg-primaryColorLight p-5">
+                    <AiOutlineClose
+                      onClick={handleHideDropdown}
+                      className="w-full cursor-pointer"
+                    />
+                    <button
+                      onClick={() => {
+                        signOut();
+                        handleHideDropdown();
+                      }}
+                    >
+                      Logout
+                    </button>
+                    <Link
+                      onClick={handleHideDropdown}
+                      href={`/user/${session?.user?._id.toString()}`}
+                    >
+                      Profile
+                    </Link>
+                  </div>
+                )}
+              </div>
             </li>
           </>
         ) : (
           <>
             <li>
               <Link
-                href={'/login'}
+                href="/login"
                 className={
                   pathname === '/login' ? 'text-primaryColor font-bold' : ''
                 }
@@ -102,12 +122,12 @@ const Navbar = () => {
             </li>
             <li>
               <Link
-                href={'/signup'}
+                href="/signup"
                 className={
                   pathname === '/signup' ? 'text-primaryColor font-bold' : ''
                 }
               >
-                Sign Up{' '}
+                Sign Up
               </Link>
             </li>
           </>

@@ -16,15 +16,19 @@ export const authOptions = {
 
         try {
           const user = await User.findOne({ email });
+
           if (!user) {
             throw new Error('Invalid input');
           }
+
           const passwordMatch = await bcrypt.compare(password, user.password);
+
           if (!passwordMatch) {
             throw new Error('Password do not match');
           } else {
             const { password, ...currentUser } = user._doc;
             const accessToken = signJwtToken(currentUser, { expiresIn: '7d' });
+
             return { ...currentUser, accessToken };
           }
         } catch (error) {

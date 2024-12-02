@@ -6,9 +6,12 @@ import { NextResponse } from 'next/server';
 
 export async function POST(req) {
   await connect();
+
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return new Response(
       JSON.stringify({ error: 'unauthorized (wrong or expired token)' }),
@@ -17,6 +20,7 @@ export async function POST(req) {
       }
     );
   }
+
   try {
     const body = await req.json();
     const newBlog = await Blog.create(body);
@@ -28,6 +32,7 @@ export async function POST(req) {
 
 export async function GET(req) {
   await connect();
+
   try {
     const blogs = await Blog.find({})
       .populate({

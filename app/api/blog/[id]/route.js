@@ -6,16 +6,20 @@ import { NextResponse } from 'next/server';
 
 export async function PUT(req, res) {
   await connect();
+
   const id = res.params.id;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return NextResponse.json(
       { error: 'unauthorized (wrong or expired token)' },
       { status: 403 }
     );
   }
+
   try {
     const body = await req.json();
     const blog = await Blog.findById(id).populate('authorId');
@@ -40,6 +44,7 @@ export async function PUT(req, res) {
 
 export async function GET(req, res) {
   await connect();
+
   const id = res.params.id;
 
   try {
@@ -63,13 +68,16 @@ export async function DELETE(req, res) {
   const id = res.params.id;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return NextResponse.json(
       { error: 'unauthorized (wrong or expired token)' },
       { status: 403 }
     );
   }
+
   try {
     const blog = await Blog.findById(id).populate('authorId');
 
@@ -81,6 +89,7 @@ export async function DELETE(req, res) {
     }
 
     await Blog.findByIdAndDelete(id);
+
     return NextResponse.json(
       { message: 'Successfully deleted blog' },
       { status: 200 }

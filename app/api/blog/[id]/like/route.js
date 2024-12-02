@@ -10,13 +10,16 @@ export async function PUT(req, res) {
   const id = res.params.id;
   const accessToken = req.headers.get('authorization');
   const token = accessToken.split(' ')[1]; // get [bearer,token] and we use split to take token
+
   const decodedToken = verifyJwtToken(token);
+
   if (!accessToken || !decodedToken) {
     return NextResponse.json(
       { error: 'unauthorized (wrong or expired token)' },
       { status: 403 }
     );
   }
+
   try {
     const blog = await Blog.findById(id);
 
